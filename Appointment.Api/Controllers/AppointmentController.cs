@@ -1,4 +1,5 @@
 using Hl7.Fhir.Rest;
+using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Appointment.Api.Controllers
@@ -27,7 +28,7 @@ namespace Appointment.Api.Controllers
         public async Task<ObjectResult> Post([FromBody] Hl7.Fhir.Model.Appointment appointment)
         {
             var response = await _client.CreateAsync(appointment);
-            return Ok(response);
+            return Ok(response.ToJson());
         }
     }
 }

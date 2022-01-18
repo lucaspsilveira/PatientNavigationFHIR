@@ -1,4 +1,5 @@
 using Hl7.Fhir.Rest;
+using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Procedure.Api.Controllers
@@ -27,7 +28,7 @@ namespace Procedure.Api.Controllers
         public async Task<ObjectResult> Post([FromBody] Hl7.Fhir.Model.Procedure procedure)
         {
             var response = await _client.CreateAsync(procedure);
-            return Ok(response);
+            return Ok(response.ToJson());
         }
 
     }

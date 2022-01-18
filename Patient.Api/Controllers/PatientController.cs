@@ -1,4 +1,5 @@
 using Hl7.Fhir.Rest;
+using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Patient.Api.Controllers
@@ -28,7 +29,7 @@ namespace Patient.Api.Controllers
         public async Task<ObjectResult> PostAsync([FromBody] Hl7.Fhir.Model.Patient patient)
         {
             var result = await _client.CreateAsync(patient).ConfigureAwait(false);
-            return Ok(result);
+            return Ok(result.ToJson());
         }
     }
 }
