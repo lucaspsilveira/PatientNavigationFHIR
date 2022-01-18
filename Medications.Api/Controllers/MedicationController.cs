@@ -1,4 +1,4 @@
-using Hl7.Fhir.Rest;
+﻿using Hl7.Fhir.Rest;
 using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -6,13 +6,12 @@ namespace Medications.Api.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class MedicationStatementController : ControllerBase
+    public class MedicationController : ControllerBase
     {
-        
-        private readonly ILogger<MedicationStatementController> _logger;
+        private readonly ILogger<MedicationController> _logger;
         private readonly FhirClient _client;
 
-        public MedicationStatementController(ILogger<MedicationStatementController> logger)
+        public MedicationController(ILogger<MedicationController> logger)
         {
             _logger = logger;
             var settings = new FhirClientSettings
@@ -26,12 +25,15 @@ namespace Medications.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<ObjectResult> Post(string medicationStatement)
+        public async Task<ObjectResult> Post(string medication)
         {
             var parser = new FhirJsonParser();
-            var resource = parser.Parse<Hl7.Fhir.Model.MedicationStatement>(medicationStatement);
+            var resource = parser.Parse<Hl7.Fhir.Model.Medication>(medication);
             var response = await _client.CreateAsync(resource);
             return Ok(response.ToJson());
         }
+
+
+
     }
 }
