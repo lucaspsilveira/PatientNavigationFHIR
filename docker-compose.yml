@@ -48,3 +48,10 @@ services:
       context: .
       dockerfile: Appointment.Consumer/Dockerfile
 
+
+  medications.consumer:
+    image: ${DOCKER_REGISTRY-}medicationsconsumer
+    build:
+      context: .
+      dockerfile: Medications.Consumer/Dockerfile
+

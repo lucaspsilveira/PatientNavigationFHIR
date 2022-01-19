@@ -17,9 +17,11 @@ Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-co
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Patient.Consumer", "Patient.Consumer\Patient.Consumer.csproj", "{7725FAEA-97E7-4F6A-AF89-EF13A5063924}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Procedure.Consumer", "Procedure.Consumer\Procedure.Consumer.csproj", "{9F4A3714-D7F5-4812-B43E-8EAD0672A9CF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Procedure.Consumer", "Procedure.Consumer\Procedure.Consumer.csproj", "{9F4A3714-D7F5-4812-B43E-8EAD0672A9CF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Appointment.Consumer", "Appointment.Consumer\Appointment.Consumer.csproj", "{A3B37B1A-026E-4B92-B005-BABF9798C1A6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Appointment.Consumer", "Appointment.Consumer\Appointment.Consumer.csproj", "{A3B37B1A-026E-4B92-B005-BABF9798C1A6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Medications.Consumer", "Medications.Consumer\Medications.Consumer.csproj", "{8AF90566-E281-4557-A0DD-21FE7A9BB4C4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -63,6 +65,10 @@ Global
 		{A3B37B1A-026E-4B92-B005-BABF9798C1A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A3B37B1A-026E-4B92-B005-BABF9798C1A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A3B37B1A-026E-4B92-B005-BABF9798C1A6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8AF90566-E281-4557-A0DD-21FE7A9BB4C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8AF90566-E281-4557-A0DD-21FE7A9BB4C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8AF90566-E281-4557-A0DD-21FE7A9BB4C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8AF90566-E281-4557-A0DD-21FE7A9BB4C4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
