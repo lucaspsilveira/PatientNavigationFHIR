@@ -1,6 +1,7 @@
 using Hl7.Fhir.Rest;
 using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Mvc;
+using PatientNavigation.Common.KakfaHelpers;
 
 namespace Medications.Api.Controllers
 {
@@ -10,19 +11,16 @@ namespace Medications.Api.Controllers
     {
 
         private readonly ILogger<MedicationStatementController> _logger;
-        private readonly FhirClient _client;
+        private EventsHelper _eventsHelper;
+        private string _topicName;
 
-        public MedicationStatementController(ILogger<MedicationStatementController> logger)
+        public MedicationStatementController(ILogger<MedicationStatementController> logger, IConfiguration configuration)
         {
             _logger = logger;
-            var settings = new FhirClientSettings
-            {
-                Timeout = 30,
-                PreferredFormat = ResourceFormat.Json,
-                VerifyFhirVersion = true,
-                PreferredReturn = Prefer.RespondAsync
-            };
-            _client = new FhirClient("http://hapi.fhir.org/baseR4", settings);
+            var boostrapServer = configuration.GetValue<string>("KafkaConfig:Servers");
+            _eventsHelper = new EventsHelper(boostrapServer);
+
+            _topicName = configuration.GetValue<string>("KafkaConfig:MedicationStatementTopicName");
         }
 
         [HttpPost]
@@ -30,8 +28,8 @@ namespace Medications.Api.Controllers
         {
             var parser = new FhirJsonParser();
             var resource = parser.Parse<Hl7.Fhir.Model.MedicationStatement>(medicationStatement);
-            var response = await _client.CreateAsync(resource);
-            return Ok(response.ToJson());
+            await _eventsHelper.Produce(_topicName, resource.ToJson());
+            return Ok("");
         }
     }
 }
