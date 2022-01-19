@@ -1,4 +1,3 @@
-using Confluent.Kafka;
 using PatientNavigation.Common.KakfaHelpers;
 using System.Text.Json.Serialization;
 

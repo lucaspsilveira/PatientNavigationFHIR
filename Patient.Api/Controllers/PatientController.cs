@@ -15,7 +15,7 @@ namespace Patient.Api.Controllers
         public PatientController(ILogger<PatientController> logger, IConfiguration configuration)
         {
             _logger = logger;
-            
+
             var boostrapServer = configuration.GetValue<string>("KafkaConfig:Servers");
             _eventsHelper = new EventsHelper(boostrapServer);
 

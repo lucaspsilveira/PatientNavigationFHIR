@@ -8,7 +8,7 @@ namespace Medications.Api.Controllers
     [Route("[controller]")]
     public class MedicationStatementController : ControllerBase
     {
-        
+
         private readonly ILogger<MedicationStatementController> _logger;
         private readonly FhirClient _client;
 
