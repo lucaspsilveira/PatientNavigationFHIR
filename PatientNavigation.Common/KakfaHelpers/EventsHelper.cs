@@ -1,0 +1,40 @@
+﻿using Confluent.Kafka;
+using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace PatientNavigation.Common.KakfaHelpers
+{
+    public class EventsHelper
+    {
+        private string _boostrapServers;
+        private readonly ClientConfig _clientConfig;
+        public EventsHelper(string boostrapServers)
+        {
+            _boostrapServers = boostrapServers;
+            _clientConfig = new()
+            {
+                BootstrapServers = _boostrapServers,
+                SecurityProtocol = SecurityProtocol.Plaintext
+            };
+        }
+
+        public async Task<DeliveryResult<Null, string>?> Produce(string topicName, string message)
+        {
+            using var producer = new ProducerBuilder<Null, string>(_clientConfig).Build();
+            return await producer.ProduceAsync(topicName, new Message<Null, string> { Value = message }).ContinueWith(task =>
+            {
+                if (task.IsFaulted)
+                {
+                    Console.WriteLine("An error has occured during publishing process. Details: " + task?.Exception?.Message ?? string.Empty);
+                    return task?.Result;
+                }
+                Console.WriteLine($"Wrote to offset: {task.Result.Offset}");
+                return task.Result;
+            });
+        }
+    }
+}

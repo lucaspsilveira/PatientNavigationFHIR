@@ -7,11 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Confluent.Kafka" Version="1.8.2" />
     <PackageReference Include="Hl7.Fhir.R4" Version="3.8.0" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="KakfaHelpers\" />
     <Folder Include="FHIRHelpers\" />
   </ItemGroup>
 
