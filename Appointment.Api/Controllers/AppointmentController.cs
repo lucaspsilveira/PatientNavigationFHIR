@@ -1,6 +1,6 @@
-using Hl7.Fhir.Rest;
 using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Mvc;
+using PatientNavigation.Common.KakfaHelpers;
 
 namespace Appointment.Api.Controllers
 {
@@ -9,26 +9,23 @@ namespace Appointment.Api.Controllers
     public class AppointmentController : ControllerBase
     {
         private readonly ILogger<AppointmentController> _logger;
-        private readonly FhirClient _client;
+        private readonly EventsHelper _eventsHelper;
+        private readonly string _topicName;
 
-        public AppointmentController(ILogger<AppointmentController> logger)
+        public AppointmentController(ILogger<AppointmentController> logger, IConfiguration configuration)
         {
             _logger = logger;
-            var settings = new FhirClientSettings
-            {
-                Timeout = 30,
-                PreferredFormat = ResourceFormat.Json,
-                VerifyFhirVersion = true,
-                PreferredReturn = Prefer.RespondAsync
-            };
-            _client = new FhirClient("http://hapi.fhir.org/baseR4", settings);
+            var boostrapServer = configuration.GetValue<string>("KafkaConfig:Servers");
+            _eventsHelper = new EventsHelper(boostrapServer);
+
+            _topicName = configuration.GetValue<string>("KafkaConfig:TopicName");
         }
 
         [HttpPost]
         public async Task<ObjectResult> Post([FromBody] Hl7.Fhir.Model.Appointment appointment)
         {
-            var response = await _client.CreateAsync(appointment);
-            return Ok(response.ToJson());
+            await _eventsHelper.Produce(_topicName, appointment.ToJson());
+            return Ok("");
         }
     }
 }
