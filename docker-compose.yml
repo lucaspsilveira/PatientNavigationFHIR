@@ -41,3 +41,10 @@ services:
       context: .
       dockerfile: Procedure.Consumer/Dockerfile
 
+
+  appointment.consumer:
+    image: ${DOCKER_REGISTRY-}appointmentconsumer
+    build:
+      context: .
+      dockerfile: Appointment.Consumer/Dockerfile
+

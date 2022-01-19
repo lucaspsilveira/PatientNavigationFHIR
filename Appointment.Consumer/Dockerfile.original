@@ -6,7 +6,6 @@ WORKDIR /app
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
 COPY ["Appointment.Consumer/Appointment.Consumer.csproj", "Appointment.Consumer/"]
-COPY ["PatientNavigation.Common/PatientNavigation.Common.csproj", "PatientNavigation.Common/"]
 RUN dotnet restore "Appointment.Consumer/Appointment.Consumer.csproj"
 COPY . .
 WORKDIR "/src/Appointment.Consumer"
