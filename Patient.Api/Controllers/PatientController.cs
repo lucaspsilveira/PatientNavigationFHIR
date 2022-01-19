@@ -11,7 +11,6 @@ namespace Patient.Api.Controllers
     public class PatientController : ControllerBase
     {
         private readonly ILogger<PatientController> _logger;
-        private readonly FhirClient _client;
         private readonly string _topicName;
         private readonly EventsHelper _eventsHelper;
 
