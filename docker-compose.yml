@@ -34,3 +34,10 @@ services:
       context: .
       dockerfile: Patient.Consumer/Dockerfile
 
+
+  procedure.consumer:
+    image: ${DOCKER_REGISTRY-}procedureconsumer
+    build:
+      context: .
+      dockerfile: Procedure.Consumer/Dockerfile
+
