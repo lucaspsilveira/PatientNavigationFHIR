@@ -23,22 +23,11 @@ namespace Patient.Api.Controllers
             _eventsHelper = new EventsHelper(boostrapServer);
 
             _topicName = configuration.GetValue<string>("KafkaConfig:TopicName");
-
-            var settings = new FhirClientSettings
-            {
-                Timeout = 30,
-                PreferredFormat = ResourceFormat.Json,
-                VerifyFhirVersion = true,
-                PreferredReturn = Prefer.RespondAsync
-            };
-
-            _client = new FhirClient("http://hapi.fhir.org/baseR4", settings);
         }
 
         [HttpPost]
         public async Task<ObjectResult> PostAsync([FromBody] Hl7.Fhir.Model.Patient patient)
         {
-            //var result = await _client.CreateAsync(patient).ConfigureAwait(false);
             await _eventsHelper.Produce(_topicName, patient.ToJson());
             return Ok("");
         }
