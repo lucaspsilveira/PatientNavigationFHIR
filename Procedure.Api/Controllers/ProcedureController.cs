@@ -1,6 +1,7 @@
 using Hl7.Fhir.Rest;
 using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Mvc;
+using PatientNavigation.Common.KakfaHelpers;
 
 namespace Procedure.Api.Controllers
 {
@@ -9,27 +10,24 @@ namespace Procedure.Api.Controllers
     public class ProcedureController : ControllerBase
     {
         private readonly ILogger<ProcedureController> _logger;
-        private readonly FhirClient _client;
+        private readonly EventsHelper _eventsHelper;
+        private readonly string _topicName;
 
-        public ProcedureController(ILogger<ProcedureController> logger)
+        public ProcedureController(ILogger<ProcedureController> logger, IConfiguration configuration)
         {
             _logger = logger;
-            var settings = new FhirClientSettings
-            {
-                Timeout = 30,
-                PreferredFormat = ResourceFormat.Json,
-                VerifyFhirVersion = true,
-                PreferredReturn = Prefer.RespondAsync
-            };
-            _client = new FhirClient("http://hapi.fhir.org/baseR4", settings);
+
+            var boostrapServer = configuration.GetValue<string>("KafkaConfig:Servers");
+            _eventsHelper = new EventsHelper(boostrapServer);
+
+            _topicName = configuration.GetValue<string>("KafkaConfig:TopicName");
         }
 
         [HttpPost]
         public async Task<ObjectResult> Post([FromBody] Hl7.Fhir.Model.Procedure procedure)
         {
-            var response = await _client.CreateAsync(procedure);
-            return Ok(response.ToJson());
+            await _eventsHelper.Produce(_topicName, procedure.ToJson());
+            return Ok("");
         }
-
     }
 }
