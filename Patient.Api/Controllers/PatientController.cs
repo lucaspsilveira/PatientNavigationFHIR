@@ -25,6 +25,14 @@ namespace Patient.Api.Controllers
         [HttpPost]
         public async Task<ObjectResult> PostAsync([FromBody] Hl7.Fhir.Model.Patient patient)
         {
+            patient.Id = Guid.NewGuid().ToString();
+            await _eventsHelper.Produce(_topicName, patient.ToJson());
+            return Ok(new { Id = patient.Id });
+        }
+
+        [HttpPut("{patientId}")]
+        public async Task<ObjectResult> PostAsync([FromRoute] int patientId, [FromBody] Hl7.Fhir.Model.Patient patient)
+        {
             await _eventsHelper.Produce(_topicName, patient.ToJson());
             return Ok("");
         }

@@ -26,11 +26,11 @@ namespace Patient.Consumer
         {
             var parser = new FhirJsonParser();
             var resource = parser.Parse<Hl7.Fhir.Model.Patient>(patientPayload);
-            var result = await _client.CreateAsync(resource).ConfigureAwait(false);
+            var result = await _client.UpdateAsync(resource).ConfigureAwait(false);
             if (result != null)
-                _logger.LogInformation($"Patient created on FHIR Server with Id: {result.Id}");
+                _logger.LogInformation($"Patient created/updated on FHIR Server with Id: {result.Id}");
             else
-                _logger.LogError($"Patient not created on FHIR Server.");
+                _logger.LogError($"Patient not created/updated on FHIR Server.");
         }
 
     }
