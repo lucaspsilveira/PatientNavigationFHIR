@@ -1,7 +1,10 @@
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using PatientNavigation.Common.KakfaHelpers;
+using PatientNavigation.Common.Options;
+using PatientNavigation.Common.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,9 +16,22 @@ JsonConvert.DefaultSettings = (() =>
     settings.Converters.Add(new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() });
     return settings;
 });
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.Configure<MedicationsMongoDatabaseSettings>(
+        builder.Configuration.GetSection(nameof(MedicationsMongoDatabaseSettings)));
+builder.Services.Configure<MedicationStatementsMongoDatabaseSettings>(
+        builder.Configuration.GetSection(nameof(MedicationStatementsMongoDatabaseSettings)));
+
+builder.Services.AddSingleton<IMedicationsMongoDatabaseSettings>(sp =>
+    sp.GetRequiredService<IOptions<MedicationsMongoDatabaseSettings>>().Value);
+builder.Services.AddSingleton<IMedicationStatementsMongoDatabaseSettings>(sp =>
+    sp.GetRequiredService<IOptions<MedicationStatementsMongoDatabaseSettings>>().Value);
+
+builder.Services.AddTransient<IMedicationRepository, MedicationRepository>();
+builder.Services.AddTransient<IMedicationStatementRepository, MedicationStatementRepository>();
 
 var bootstrapServer = builder.Configuration.GetValue<string>("KafkaConfig:Servers");
 var medicationTopicName = builder.Configuration.GetValue<string>("KafkaConfig:MedicationTopicName");

@@ -2,6 +2,7 @@
 using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using PatientNavigation.Common.KakfaHelpers;
+using PatientNavigation.Common.Repositories;
 
 namespace Medications.Api.Controllers
 {
@@ -10,12 +11,16 @@ namespace Medications.Api.Controllers
     public class MedicationController : ControllerBase
     {
         private readonly ILogger<MedicationController> _logger;
+        private readonly IMedicationRepository _medicationRepository;
         private readonly EventsHelper _eventsHelper;
         private readonly string _topicName;
 
-        public MedicationController(ILogger<MedicationController> logger, IConfiguration configuration)
+        public MedicationController(ILogger<MedicationController> logger,
+                                    IConfiguration configuration,
+                                    IMedicationRepository medicationRepository)
         {
             _logger = logger;
+            _medicationRepository = medicationRepository;
             var boostrapServer = configuration.GetValue<string>("KafkaConfig:Servers");
             _eventsHelper = new EventsHelper(boostrapServer);
 
@@ -28,6 +33,12 @@ namespace Medications.Api.Controllers
             var parser = new FhirJsonParser();
             var resource = parser.Parse<Hl7.Fhir.Model.Medication>(medication.ToString());
             resource.Id = Guid.NewGuid().ToString();
+            var result = _medicationRepository.Create(new PatientNavigation.Common.Models.MedicationResource {
+                Medication = resource,
+                LastUpdated = DateTime.UtcNow,
+                Status = "PENDING"
+            });
+            
             await _eventsHelper.Produce(_topicName, resource.ToJson());
             return Ok(new { Id = resource.Id });
         }
@@ -39,6 +50,13 @@ namespace Medications.Api.Controllers
             var resource = parser.Parse<Hl7.Fhir.Model.Medication>(medication.ToString());
             await _eventsHelper.Produce(_topicName, resource.ToJson());
             return Ok("");
+        }
+
+        [HttpGet("{medicationId}")]
+        public ObjectResult Get([FromRoute] string medicationId)
+        {
+            var result = _medicationRepository.Get(medicationId);
+            return Ok(result.Medication.ToJson());
         }
     }
 }

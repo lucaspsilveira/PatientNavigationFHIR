@@ -1,5 +1,7 @@
 ﻿using Hl7.Fhir.Rest;
 using Hl7.Fhir.Serialization;
+using PatientNavigation.Common.Models;
+using PatientNavigation.Common.Repositories;
 
 namespace Medications.Consumer
 {
@@ -7,10 +9,15 @@ namespace Medications.Consumer
     {
         private FhirClient _client;
         private ILogger<MedicationStatementService> _logger;
+        private readonly IMedicationStatementRepository _medicationStatementRepository;
 
-        public MedicationStatementService(ILogger<MedicationStatementService> logger, IConfiguration configuration)
+        public MedicationStatementService(
+            ILogger<MedicationStatementService> logger,
+            IConfiguration configuration,
+            IMedicationStatementRepository medicationStatementRepository)
         {
             _logger = logger;
+            _medicationStatementRepository = medicationStatementRepository;
             var settings = new FhirClientSettings
             {
                 Timeout = 30,
@@ -27,10 +34,21 @@ namespace Medications.Consumer
             var parser = new FhirJsonParser();
             var resource = parser.Parse<Hl7.Fhir.Model.MedicationStatement>(medicationStatementPayload);
             var result = await _client.UpdateAsync(resource).ConfigureAwait(false);
+            var medicationStatementResource = new MedicationStatementResource {
+                MedicationStatement = resource,
+                LastUpdated = DateTime.UtcNow
+            };
             if (result != null)
+            {
                 _logger.LogInformation($"Medication Statement created/updated on FHIR Server with Id: {result.Id}");
+                medicationStatementResource.Status = "CREATED";
+            }
             else
+            {
                 _logger.LogError($"Medication Statement not created/updated on FHIR Server.");
+                medicationStatementResource.Status = "FAILED";
+            }
+            _medicationStatementRepository.Update(resource.Id, medicationStatementResource);
         }
     }
 }
