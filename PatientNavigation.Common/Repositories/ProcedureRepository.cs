@@ -44,8 +44,10 @@ namespace PatientNavigation.Common.Repositories
 
             var update = Builders<ProcedureResource>.Update
                 .Set(r => r.Status, procedureResourceIn.Status)
-                .Set(r => r.Procedure, procedureResourceIn.Procedure)
                 .Set(r => r.LastUpdated, procedureResourceIn.LastUpdated);
+            
+            if (procedureResourceIn.Procedure != null)
+                update = update.Set(r => r.Procedure, procedureResourceIn.Procedure);
 
             _procedureResources.UpdateOne(procedureResource => procedureResource.Procedure!.Id == id, update);
         }

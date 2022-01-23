@@ -44,8 +44,10 @@ namespace PatientNavigation.Common.Repositories
 
             var update = Builders<AppointmentResource>.Update
                 .Set(r => r.Status, appointmentResourceIn.Status)
-                .Set(r => r.Appointment, appointmentResourceIn.Appointment)
                 .Set(r => r.LastUpdated, appointmentResourceIn.LastUpdated);
+            
+            if (appointmentResourceIn.Appointment != null)
+                update = update.Set(r => r.Appointment, appointmentResourceIn.Appointment);
 
             _appointmentResources.UpdateOne(appointmentResource => appointmentResource.Appointment!.Id == id, update);
         }

@@ -42,9 +42,12 @@ namespace PatientNavigation.Common.Repositories
 
         public void Update(string id, PatientResource patientResourceIn)  {
 
-            var update = Builders<PatientResource>.Update.Set(r => r.Status, patientResourceIn.Status)
-                .Set(r => r.Patient, patientResourceIn.Patient)
+            var update = Builders<PatientResource>.Update
+                .Set(r => r.Status, patientResourceIn.Status)
                 .Set(r => r.LastUpdated, patientResourceIn.LastUpdated);
+            
+            if (patientResourceIn.Patient != null)
+                update = update.Set(r => r.Patient, patientResourceIn.Patient);
 
             _patientResources.UpdateOne(patientResource => patientResource.Patient!.Id == id, update);
         }
