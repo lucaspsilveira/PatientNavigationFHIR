@@ -1,5 +1,6 @@
 ﻿using Hl7.Fhir.Rest;
 using Hl7.Fhir.Serialization;
+using Newtonsoft.Json;
 using PatientNavigation.Common.Models;
 using PatientNavigation.Common.Repositories;
 
@@ -50,6 +51,27 @@ namespace Medications.Consumer
                 medicationResource.Status = "FAILED";
             }
             _medicationRepository.Update(resource.Id, medicationResource);
+        }
+
+        public async Task SyncMedication(string medicationId)
+        {
+            var result = await _client.SearchByIdAsync<Hl7.Fhir.Model.Medication>(medicationId);
+            if (result != null) 
+            {
+                var synchronizedResource = result?.Entry?.FirstOrDefault()?.Resource as Hl7.Fhir.Model.Medication;
+                var medicationResource = new PatientNavigation.Common.Models.MedicationResource 
+                    { LastUpdated = DateTime.UtcNow };
+                if (synchronizedResource != null) {
+                    _logger.LogInformation($"Medication Resource fetched from FHIR Server with ID {synchronizedResource?.Id}");
+                    medicationResource.Status = "SYNCHRONIZED";
+                    medicationResource.Medication = synchronizedResource;
+                } 
+                else 
+                {
+                    medicationResource.Status = "FAILEDSYNCHRONIZED";
+                }
+                _medicationRepository.Update(medicationId, medicationResource);
+            }
         }
     }
 }

@@ -50,5 +50,22 @@ namespace Medications.Consumer
             }
             _medicationStatementRepository.Update(resource.Id, medicationStatementResource);
         }
+
+        public async Task SyncMedicationStatement(string medicationStatementId)
+        {
+            var result = await _client.SearchByIdAsync<Hl7.Fhir.Model.MedicationStatement>(medicationStatementId);
+            if (result != null) 
+            {
+                var synchronizedResource = result?.Entry?.FirstOrDefault()?.Resource as Hl7.Fhir.Model.MedicationStatement;
+                _logger.LogInformation($"Medication Statement Resource fetched from FHIR Server with ID {synchronizedResource?.Id}");
+                var medicationStatementResource = new PatientNavigation.Common.Models.MedicationStatementResource {
+                    MedicationStatement = synchronizedResource,
+                    Status = "SYNCHRONIZED",
+                    LastUpdated = DateTime.UtcNow
+                };
+
+                _medicationStatementRepository.Update(medicationStatementId, medicationStatementResource);
+            }
+        }
     }
 }

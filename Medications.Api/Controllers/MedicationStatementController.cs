@@ -1,3 +1,4 @@
+using System.Text;
 using Hl7.Fhir.Rest;
 using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Mvc;
@@ -57,6 +58,14 @@ namespace Medications.Api.Controllers
         {
             var result = _medicationStatementRepository.Get(medicationStatementId);
             return Ok(result.MedicationStatement.ToJson());
+        }
+
+        [HttpPost("syncFHIRServer/{medicationStatementId}")]
+        public async Task<ObjectResult> SyncFHIRServerAsync([FromRoute] string medicationStatementId) 
+        {
+            var headers = new Confluent.Kafka.Headers { new Confluent.Kafka.Header("ACTION", Encoding.ASCII.GetBytes("SYNC"))};
+            await _eventsHelper.Produce(_topicName, medicationStatementId, headers);
+            return Ok("");
         }
     }
 }

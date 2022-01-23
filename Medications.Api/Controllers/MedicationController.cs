@@ -1,4 +1,5 @@
-﻿using Hl7.Fhir.Rest;
+﻿using System.Text;
+using Hl7.Fhir.Rest;
 using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using PatientNavigation.Common.KakfaHelpers;
@@ -57,6 +58,14 @@ namespace Medications.Api.Controllers
         {
             var result = _medicationRepository.Get(medicationId);
             return Ok(result.Medication.ToJson());
+        }
+
+        [HttpPost("syncFHIRServer/{medicationId}")]
+        public async Task<ObjectResult> SyncFHIRServerAsync([FromRoute] string medicationId) 
+        {
+            var headers = new Confluent.Kafka.Headers { new Confluent.Kafka.Header("ACTION", Encoding.ASCII.GetBytes("SYNC"))};
+            await _eventsHelper.Produce(_topicName, medicationId, headers);
+            return Ok("");
         }
     }
 }

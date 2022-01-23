@@ -44,8 +44,10 @@ namespace PatientNavigation.Common.Repositories
 
             var update = Builders<MedicationResource>.Update
                 .Set(r => r.Status, medicationResourceIn.Status)
-                .Set(r => r.Medication, medicationResourceIn.Medication)
                 .Set(r => r.LastUpdated, medicationResourceIn.LastUpdated);
+
+            if (medicationResourceIn.Medication != null)
+                update = update.Set(r => r.Medication, medicationResourceIn.Medication);
 
             _medicationResources.UpdateOne(medicationResource => medicationResource.Medication!.Id == id, update);
         }

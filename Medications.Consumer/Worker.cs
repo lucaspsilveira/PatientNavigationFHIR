@@ -1,3 +1,4 @@
+using System.Text;
 using Confluent.Kafka;
 
 namespace Medications.Consumer
@@ -37,6 +38,7 @@ namespace Medications.Consumer
             {
                 using var consumer = new ConsumerBuilder<Null, string>(config).Build();
                 consumer.Subscribe(_topicNames);
+                Console.WriteLine($"Subscribed to: {string.Join(", ",_topicNames)}");
 
                 while (!stoppingToken.IsCancellationRequested)
                 {
@@ -46,10 +48,27 @@ namespace Medications.Consumer
                     if (consumeResult?.Message?.Value is null)
                         continue;
                     
+                    var headerActionBytes = consumeResult.Message.Headers.FirstOrDefault(a => a.Key.ToLower() == "action")?.GetValueBytes();
+                    
+                    var value = headerActionBytes is null ? string.Empty : Encoding.UTF8.GetString(headerActionBytes);
+
                     if (string.Equals(consumeResult.Topic, _medicationTopicName))
+                    {
+                        if (value.ToLower() == "sync") 
+                        {
+                            await _medicationService.SyncMedication(consumeResult.Message.Value);
+                            continue;
+                        }
                         await _medicationService.InsertMedication(consumeResult.Message.Value);
+                    }
                     if (string.Equals(consumeResult.Topic, _medicationStatementTopicName))
+                    {
+                        if (value.ToLower() == "sync") {
+                            await _medicationStatementService.SyncMedicationStatement(consumeResult.Message.Value);
+                            continue;
+                        }
                         await _medicationStatementService.InsertMedicationStatement(consumeResult.Message.Value);
+                    }
                 }
 
                 consumer.Close();
