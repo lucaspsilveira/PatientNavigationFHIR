@@ -48,5 +48,22 @@ namespace Procedure.Consumer
             }
             _procedureRepository.Update(resource.Id, procedureResource);
         }
+
+        public async Task SyncProcedure(string procedureId)
+        {
+            var result = await _client.SearchByIdAsync<Hl7.Fhir.Model.Procedure>(procedureId);
+            if (result != null) 
+            {
+                var synchronizedResource = result?.Entry?.FirstOrDefault()?.Resource as Hl7.Fhir.Model.Procedure;
+                _logger.LogInformation($"Prodecure Resource fetched from FHIR Server with ID {synchronizedResource?.Id}");
+                var procedureResource = new PatientNavigation.Common.Models.ProcedureResource {
+                    Procedure = synchronizedResource,
+                    Status = "SYNCHRONIZED",
+                    LastUpdated = DateTime.UtcNow
+                };
+
+                _procedureRepository.Update(procedureId, procedureResource);
+            }
+        }
     }
 }

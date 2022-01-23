@@ -1,3 +1,4 @@
+using System.Text;
 using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using PatientNavigation.Common.KakfaHelpers;
@@ -51,6 +52,14 @@ namespace Procedure.Api.Controllers
         {
             var result =_procedureRepository.Get(procedureId);
             return Ok(result.Procedure.ToJson());
+        }
+
+        [HttpPost("syncFHIRServer/{procedureId}")]
+        public async Task<ObjectResult> SyncFHIRServerAsync([FromRoute] string procedureId) 
+        {
+            var headers = new Confluent.Kafka.Headers { new Confluent.Kafka.Header("ACTION", Encoding.ASCII.GetBytes("SYNC"))};
+            await _eventsHelper.Produce(_topicName, procedureId, headers);
+            return Ok("");
         }
     }
 }
