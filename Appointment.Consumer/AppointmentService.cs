@@ -1,16 +1,20 @@
 ﻿using Hl7.Fhir.Rest;
 using Hl7.Fhir.Serialization;
+using PatientNavigation.Common.Models;
+using PatientNavigation.Common.Repositories;
 
 namespace Appointment.Consumer
 {
     public class AppointmentService : IAppointmentService
     {
         private readonly ILogger<AppointmentService> _logger;
+        private readonly IAppointmentRepository _appointmentRepository;
         private readonly FhirClient _client;
 
-        public AppointmentService(ILogger<AppointmentService> logger, IConfiguration configuration)
+        public AppointmentService(ILogger<AppointmentService> logger, IConfiguration configuration, IAppointmentRepository appointmentRepository)
         {
             _logger = logger;
+            _appointmentRepository = appointmentRepository;
             var settings = new FhirClientSettings
             {
                 Timeout = 30,
@@ -30,10 +34,20 @@ namespace Appointment.Consumer
             });
             var resource = parser.Parse<Hl7.Fhir.Model.Appointment>(appointmentPayload);
             var result = await _client.UpdateAsync(resource).ConfigureAwait(false);
-            if (result != null)
+            var appointmentResource = new AppointmentResource {
+                Appointment = resource,
+                LastUpdated = DateTime.UtcNow
+            };
+
+            if (result != null) {
                 _logger.LogInformation($"Appointment created/updated on FHIR Server with Id: {result.Id}");
-            else
+                appointmentResource.Status = "CREATED";
+            }
+            else {
                 _logger.LogError($"Appointment not created/updated on FHIR Server.");
+                appointmentResource.Status = "FAILED";
+            }
+            _appointmentRepository.Update(resource.Id, appointmentResource);
         }
     }
 }

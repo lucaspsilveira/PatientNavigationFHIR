@@ -1,6 +1,7 @@
 using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using PatientNavigation.Common.KakfaHelpers;
+using PatientNavigation.Common.Repositories;
 
 namespace Appointment.Api.Controllers
 {
@@ -9,12 +10,14 @@ namespace Appointment.Api.Controllers
     public class AppointmentController : ControllerBase
     {
         private readonly ILogger<AppointmentController> _logger;
+        private readonly IAppointmentRepository _appointmentRepository;
         private readonly EventsHelper _eventsHelper;
         private readonly string _topicName;
 
-        public AppointmentController(ILogger<AppointmentController> logger, IConfiguration configuration)
+        public AppointmentController(ILogger<AppointmentController> logger, IConfiguration configuration, IAppointmentRepository appointmentRepository)
         {
             _logger = logger;
+            _appointmentRepository = appointmentRepository;
             var boostrapServer = configuration.GetValue<string>("KafkaConfig:Servers");
             _eventsHelper = new EventsHelper(boostrapServer);
 
@@ -25,6 +28,13 @@ namespace Appointment.Api.Controllers
         public async Task<ObjectResult> Post([FromBody] Hl7.Fhir.Model.Appointment appointment)
         {
             appointment.Id = Guid.NewGuid().ToString();
+            var result = _appointmentRepository.Create(new PatientNavigation.Common.Models.AppointmentResource
+            {
+                Appointment = appointment,
+                LastUpdated = DateTime.UtcNow,
+                Status = "PENDING"
+            });
+            
             await _eventsHelper.Produce(_topicName, appointment.ToJson());
             return Ok(new {Id = appointment.Id});
         }
@@ -34,6 +44,13 @@ namespace Appointment.Api.Controllers
         {
             await _eventsHelper.Produce(_topicName, appointment.ToJson());
             return Ok("");
+        }
+
+        [HttpGet("{appointmentId}")]
+        public ObjectResult Get([FromRoute] string appointmentId)
+        {
+            var resource = _appointmentRepository.Get(appointmentId);
+            return Ok(resource.Appointment.ToJson());
         }
     }
 }

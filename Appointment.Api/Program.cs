@@ -1,4 +1,7 @@
+using Microsoft.Extensions.Options;
 using PatientNavigation.Common.KakfaHelpers;
+using PatientNavigation.Common.Options;
+using PatientNavigation.Common.Repositories;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,6 +13,13 @@ builder.Services
         var enumConverter = new JsonStringEnumConverter();
         opts.JsonSerializerOptions.Converters.Add(enumConverter);
     });
+
+builder.Services.Configure<MongoDatabaseSettings>(
+        builder.Configuration.GetSection(nameof(MongoDatabaseSettings)));
+builder.Services.AddSingleton<IMongoDatabaseSettings>(sp =>
+    sp.GetRequiredService<IOptions<MongoDatabaseSettings>>().Value);
+builder.Services.AddTransient<IAppointmentRepository, AppointmentRepository>();
+
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
