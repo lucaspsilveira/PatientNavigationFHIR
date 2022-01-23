@@ -48,5 +48,21 @@ namespace Patient.Consumer
             _patientRepository.Update(resource.Id, patientResource);
         }
 
+        public async Task SyncPatient(string patientId)
+        {
+            var result = await _client.SearchByIdAsync<Hl7.Fhir.Model.Patient>(patientId);
+            if (result != null) 
+            {
+                var synchronizedResource = result?.Entry?.FirstOrDefault()?.Resource as Hl7.Fhir.Model.Patient;
+                _logger.LogInformation($"Patient Resource fetched from FHIR Server with ID {synchronizedResource?.Id}");
+                var patientResource = new PatientNavigation.Common.Models.PatientResource {
+                    Patient = synchronizedResource,
+                    Status = "SYNCHRONIZED",
+                    LastUpdated = DateTime.UtcNow
+                };
+
+                _patientRepository.Update(patientId, patientResource);
+            }
+        }
     }
 }

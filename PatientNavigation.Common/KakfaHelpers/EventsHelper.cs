@@ -16,10 +16,10 @@ namespace PatientNavigation.Common.KakfaHelpers
             };
         }
 
-        public async Task<DeliveryResult<Null, string>?> Produce(string topicName, string message)
+        public async Task<DeliveryResult<Null, string>?> Produce(string topicName, string message, Headers? headers = null)
         {
             using var producer = new ProducerBuilder<Null, string>(_clientConfig).Build();
-            return await producer.ProduceAsync(topicName, new Message<Null, string> { Value = message }).ContinueWith(task =>
+            return await producer.ProduceAsync(topicName, new Message<Null, string> { Value = message, Headers = headers}).ContinueWith(task =>
             {
                 if (task.IsFaulted)
                 {

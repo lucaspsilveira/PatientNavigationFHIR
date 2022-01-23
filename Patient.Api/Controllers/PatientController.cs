@@ -1,3 +1,4 @@
+using System.Text;
 using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using PatientNavigation.Common.KakfaHelpers;
@@ -12,6 +13,7 @@ namespace Patient.Api.Controllers
         private readonly ILogger<PatientController> _logger;
         private readonly IPatientRepository _patientRepository;
         private readonly string _topicName;
+        //private string _topicNameAction;
         private readonly EventsHelper _eventsHelper;
 
         public PatientController(ILogger<PatientController> logger, IConfiguration configuration, IPatientRepository patientRepository)
@@ -22,6 +24,7 @@ namespace Patient.Api.Controllers
 
             _patientRepository = patientRepository;
             _topicName = configuration.GetValue<string>("KafkaConfig:TopicName");
+            //_topicNameAction = configuration.GetValue<string>("KafkaConfig:TopicNameAction");
         }
 
         [HttpPost]
@@ -51,6 +54,14 @@ namespace Patient.Api.Controllers
         {
             var result = _patientRepository.Get(patientId);
             return Ok(result.Patient.ToJson());
+        }
+
+        [HttpPost("syncFHIRServer/{patientId}")]
+        public async Task<ObjectResult> SyncFHIRServerAsync([FromRoute] string patientId) 
+        {
+            var headers = new Confluent.Kafka.Headers { new Confluent.Kafka.Header("ACTION", Encoding.ASCII.GetBytes("SYNC"))};
+            await _eventsHelper.Produce(_topicName, patientId, headers);
+            return Ok("");
         }
     }
 }
