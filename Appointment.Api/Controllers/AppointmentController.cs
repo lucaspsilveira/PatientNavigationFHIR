@@ -24,6 +24,14 @@ namespace Appointment.Api.Controllers
         [HttpPost]
         public async Task<ObjectResult> Post([FromBody] Hl7.Fhir.Model.Appointment appointment)
         {
+            appointment.Id = Guid.NewGuid().ToString();
+            await _eventsHelper.Produce(_topicName, appointment.ToJson());
+            return Ok(new {Id = appointment.Id});
+        }
+
+        [HttpPut("{appointmentId}")]
+        public async Task<ObjectResult> Put([FromRoute] string appointmentId, [FromBody] Hl7.Fhir.Model.Appointment appointment)
+        {
             await _eventsHelper.Produce(_topicName, appointment.ToJson());
             return Ok("");
         }

@@ -29,11 +29,11 @@ namespace Appointment.Consumer
                 AllowUnrecognizedEnums = true
             });
             var resource = parser.Parse<Hl7.Fhir.Model.Appointment>(appointmentPayload);
-            var result = await _client.CreateAsync(resource).ConfigureAwait(false);
+            var result = await _client.UpdateAsync(resource).ConfigureAwait(false);
             if (result != null)
-                _logger.LogInformation($"Appointment created on FHIR Server with Id: {result.Id}");
+                _logger.LogInformation($"Appointment created/updated on FHIR Server with Id: {result.Id}");
             else
-                _logger.LogError($"Appointment not created on FHIR Server.");
+                _logger.LogError($"Appointment not created/updated on FHIR Server.");
         }
     }
 }
