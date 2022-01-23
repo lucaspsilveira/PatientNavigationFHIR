@@ -49,5 +49,22 @@ namespace Appointment.Consumer
             }
             _appointmentRepository.Update(resource.Id, appointmentResource);
         }
+
+        public async Task SyncAppointment(string appointmentId)
+        {
+            var result = await _client.SearchByIdAsync<Hl7.Fhir.Model.Appointment>(appointmentId);
+            if (result != null) 
+            {
+                var synchronizedResource = result?.Entry?.FirstOrDefault()?.Resource as Hl7.Fhir.Model.Appointment;
+                _logger.LogInformation($"Appointment Resource fetched from FHIR Server with ID {synchronizedResource?.Id}");
+                var patientResource = new PatientNavigation.Common.Models.AppointmentResource {
+                    Appointment = synchronizedResource,
+                    Status = "SYNCHRONIZED",
+                    LastUpdated = DateTime.UtcNow
+                };
+
+                _appointmentRepository.Update(appointmentId, patientResource);
+            }
+        }
     }
 }

@@ -1,3 +1,4 @@
+using System.Text;
 using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using PatientNavigation.Common.KakfaHelpers;
@@ -51,6 +52,14 @@ namespace Appointment.Api.Controllers
         {
             var resource = _appointmentRepository.Get(appointmentId);
             return Ok(resource.Appointment.ToJson());
+        }
+
+        [HttpPost("syncFHIRServer/{appointmentId}")]
+        public async Task<ObjectResult> SyncFHIRServerAsync([FromRoute] string appointmentId) 
+        {
+            var headers = new Confluent.Kafka.Headers { new Confluent.Kafka.Header("ACTION", Encoding.ASCII.GetBytes("SYNC"))};
+            await _eventsHelper.Produce(_topicName, appointmentId, headers);
+            return Ok("");
         }
     }
 }
