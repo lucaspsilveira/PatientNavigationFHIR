@@ -23,10 +23,20 @@ namespace Medications.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<ObjectResult> Post(string medication)
+        public async Task<ObjectResult> Post([FromBody] object medication)
         {
             var parser = new FhirJsonParser();
-            var resource = parser.Parse<Hl7.Fhir.Model.Medication>(medication);
+            var resource = parser.Parse<Hl7.Fhir.Model.Medication>(medication.ToString());
+            resource.Id = Guid.NewGuid().ToString();
+            await _eventsHelper.Produce(_topicName, resource.ToJson());
+            return Ok(new { Id = resource.Id });
+        }
+
+        [HttpPut("{medicationId}")]
+        public async Task<ObjectResult> Put([FromRoute] string medicationId, [FromBody] object medication)
+        {
+            var parser = new FhirJsonParser();
+            var resource = parser.Parse<Hl7.Fhir.Model.Medication>(medication.ToString());
             await _eventsHelper.Produce(_topicName, resource.ToJson());
             return Ok("");
         }

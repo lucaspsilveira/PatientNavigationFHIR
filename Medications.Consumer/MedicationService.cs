@@ -26,11 +26,11 @@ namespace Medications.Consumer
         {
             var parser = new FhirJsonParser();
             var resource = parser.Parse<Hl7.Fhir.Model.Medication>(medicationPayload);
-            var result = await _client.CreateAsync(resource).ConfigureAwait(false);
+            var result = await _client.UpdateAsync(resource).ConfigureAwait(false);
             if (result != null)
-                _logger.LogInformation($"Medication  created on FHIR Server with Id: {result.Id}");
+                _logger.LogInformation($"Medication created/updated on FHIR Server with Id: {result.Id}");
             else
-                _logger.LogError($"Medication  not created on FHIR Server.");
+                _logger.LogError($"Medication not created/updated on FHIR Server.");
         }
     }
 }
