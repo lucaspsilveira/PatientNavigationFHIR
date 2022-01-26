@@ -1,4 +1,5 @@
 using System.Text;
+using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using PatientNavigation.Common.KakfaHelpers;
@@ -52,6 +53,31 @@ namespace Appointment.Api.Controllers
         {
             var resource = _appointmentRepository.Get(appointmentId);
             return Ok(resource.Appointment.ToJson());
+        }
+        
+        [HttpGet("")]
+        public ObjectResult GetAllAsync()
+        {
+            var result = _appointmentRepository.Get();
+            var searchResponse = new Bundle();
+            searchResponse.Type = Bundle.BundleType.Searchset;
+
+            // adding some metadata
+            searchResponse.Id = Guid.NewGuid().ToString();
+            searchResponse.Meta = new Meta()
+            {
+                VersionId = "1",
+                LastUpdatedElement = Instant.Now()
+            };
+
+            // TODO: ADD AFTER
+            //searchResponse.SelfLink = new Uri();
+            searchResponse.Total = result.Count;
+
+            foreach (var r in result.Select(a => a.Appointment))
+                searchResponse.AddSearchEntry(r, "", Bundle.SearchEntryMode.Match);
+            
+            return Ok(searchResponse.ToJson());
         }
 
         [HttpPost("syncFHIRServer/{appointmentId}")]
