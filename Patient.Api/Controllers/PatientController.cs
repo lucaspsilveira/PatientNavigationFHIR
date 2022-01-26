@@ -1,4 +1,5 @@
 using System.Text;
+using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using PatientNavigation.Common.KakfaHelpers;
@@ -24,7 +25,6 @@ namespace Patient.Api.Controllers
 
             _patientRepository = patientRepository;
             _topicName = configuration.GetValue<string>("KafkaConfig:TopicName");
-            //_topicNameAction = configuration.GetValue<string>("KafkaConfig:TopicNameAction");
         }
 
         [HttpPost]
@@ -56,10 +56,37 @@ namespace Patient.Api.Controllers
             return Ok(result.Patient.ToJson());
         }
 
-        [HttpPost("syncFHIRServer/{patientId}")]
-        public async Task<ObjectResult> SyncFHIRServerAsync([FromRoute] string patientId) 
+        [HttpGet("")]
+        public ObjectResult GetAllAsync()
         {
-            var headers = new Confluent.Kafka.Headers { new Confluent.Kafka.Header("ACTION", Encoding.ASCII.GetBytes("SYNC"))};
+            var result = _patientRepository.Get();
+            var searchResponse = new Bundle();
+            searchResponse.Type = Bundle.BundleType.Searchset;
+
+            // adding some metadata
+            searchResponse.Id = Guid.NewGuid().ToString();
+            searchResponse.Meta = new Meta()
+            {
+                VersionId = "1",
+                LastUpdatedElement = Instant.Now()
+            };
+
+            // TODO: ADD AFTER
+            //searchResponse.SelfLink = new Uri();
+            searchResponse.Total = result.Count;
+
+            foreach (var r in result.Select(a => a.Patient))
+            {
+                //var full_url = r?.ResourceBase.ToString() + r?.TypeName.ToString() + r?.Id;
+                searchResponse.AddSearchEntry(r, "", Bundle.SearchEntryMode.Match);
+            }
+            return Ok(searchResponse.ToJson());
+        }
+
+        [HttpPost("syncFHIRServer/{patientId}")]
+        public async Task<ObjectResult> SyncFHIRServerAsync([FromRoute] string patientId)
+        {
+            var headers = new Confluent.Kafka.Headers { new Confluent.Kafka.Header("ACTION", Encoding.ASCII.GetBytes("SYNC")) };
             await _eventsHelper.Produce(_topicName, patientId, headers);
             return Ok("");
         }
