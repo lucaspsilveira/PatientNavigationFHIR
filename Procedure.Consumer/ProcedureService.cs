@@ -30,12 +30,23 @@ namespace Procedure.Consumer
         {
             var parser = new FhirJsonParser();
             var resource = parser.Parse<Hl7.Fhir.Model.Procedure>(procedurePayload);
-            var result = await _client.UpdateAsync(resource).ConfigureAwait(false);
-            var procedureResource = new ProcedureResource {
+            var procedureResource = new ProcedureResource
+            {
                 Procedure = resource,
                 LastUpdated = DateTime.UtcNow
             };
-            
+
+            if (string.IsNullOrEmpty(resource.Id) || resource.Subject.Reference.Split("/")[1].Length != 2)
+            {
+                _logger.LogError($"Procedure not created/updated on FHIR Server.");
+                procedureResource.Status = "FAILED";
+                _procedureRepository.Update(resource.Id, procedureResource);
+                return;
+            }
+
+            var result = await _client.UpdateAsync(resource).ConfigureAwait(false);
+
+
             if (result != null)
             {
                 _logger.LogInformation($"Procedure created/updated on FHIR Server with Id: {result.Id}");
@@ -52,11 +63,12 @@ namespace Procedure.Consumer
         public async Task SyncProcedure(string procedureId)
         {
             var result = await _client.SearchByIdAsync<Hl7.Fhir.Model.Procedure>(procedureId);
-            if (result != null) 
+            if (result != null)
             {
                 var synchronizedResource = result?.Entry?.FirstOrDefault()?.Resource as Hl7.Fhir.Model.Procedure;
                 _logger.LogInformation($"Prodecure Resource fetched from FHIR Server with ID {synchronizedResource?.Id}");
-                var procedureResource = new PatientNavigation.Common.Models.ProcedureResource {
+                var procedureResource = new PatientNavigation.Common.Models.ProcedureResource
+                {
                     Procedure = synchronizedResource,
                     Status = "SYNCHRONIZED",
                     LastUpdated = DateTime.UtcNow

@@ -29,18 +29,29 @@ namespace Patient.Consumer
         {
             var parser = new FhirJsonParser();
             var resource = parser.Parse<Hl7.Fhir.Model.Patient>(patientPayload);
+            var patientResource = new PatientNavigation.Common.Models.PatientResource
+            {
+                Patient = resource,
+                LastUpdated = DateTime.UtcNow
+            };
+
+            if (string.IsNullOrWhiteSpace(resource.Id))
+            {
+                _logger.LogError($"Patient not created/updated on FHIR Server.");
+                patientResource.Status = "FAILED";
+                _patientRepository.Update(resource.Id, patientResource);
+                return;
+            }
+
             var result = await _client.UpdateAsync(resource).ConfigureAwait(false);
-            var patientResource = new PatientNavigation.Common.Models.PatientResource {
-                    Patient = resource,
-                    LastUpdated = DateTime.UtcNow
-                };
-                
-            if (result != null) 
+            
+
+            if (result != null)
             {
                 _logger.LogInformation($"Patient created/updated on FHIR Server with Id: {result.Id}");
                 patientResource.Status = "CREATED";
             }
-            else 
+            else
             {
                 _logger.LogError($"Patient not created/updated on FHIR Server.");
                 patientResource.Status = "FAILED";
@@ -51,11 +62,12 @@ namespace Patient.Consumer
         public async Task SyncPatient(string patientId)
         {
             var result = await _client.SearchByIdAsync<Hl7.Fhir.Model.Patient>(patientId);
-            if (result != null) 
+            if (result != null)
             {
                 var synchronizedResource = result?.Entry?.FirstOrDefault()?.Resource as Hl7.Fhir.Model.Patient;
                 _logger.LogInformation($"Patient Resource fetched from FHIR Server with ID {synchronizedResource?.Id}");
-                var patientResource = new PatientNavigation.Common.Models.PatientResource {
+                var patientResource = new PatientNavigation.Common.Models.PatientResource
+                {
                     Patient = synchronizedResource,
                     Status = "SYNCHRONIZED",
                     LastUpdated = DateTime.UtcNow
