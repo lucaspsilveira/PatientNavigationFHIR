@@ -56,9 +56,13 @@ namespace Procedure.Api.Controllers
         }
 
         [HttpGet("")]
-        public ObjectResult GetAllAsync()
+        public ObjectResult GetAllAsync([FromQuery] string? subjectId)
         {
-            var result = _procedureRepository.Get();
+            var result = new List<PatientNavigation.Common.Models.ProcedureResource>();
+            if (string.IsNullOrEmpty(subjectId))
+                result = _procedureRepository.Get();
+            else
+                result = _procedureRepository.GetProcedureFromSubject(subjectId);
             var searchResponse = new Bundle();
             searchResponse.Type = Bundle.BundleType.Searchset;
 

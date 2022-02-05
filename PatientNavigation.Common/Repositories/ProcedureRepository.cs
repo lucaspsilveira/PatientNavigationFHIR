@@ -14,6 +14,7 @@ namespace PatientNavigation.Common.Repositories
         void Remove(ProcedureResource procedureResourceIn);
         void Remove(string id);
         void Update(string id, ProcedureResource procedureResourceIn);
+        List<ProcedureResource> GetProcedureFromSubject(string subjectId);
     }
 
     public class ProcedureRepository : IProcedureRepository
@@ -30,6 +31,8 @@ namespace PatientNavigation.Common.Repositories
 
         public List<ProcedureResource> Get() =>
             _procedureResources.Find(procedureResource => true).ToList();
+        public List<ProcedureResource> GetProcedureFromSubject(string subjectId) =>
+            _procedureResources.Find(procedureResource => procedureResource.Procedure != null && procedureResource.Procedure.Subject.Reference.Contains(subjectId)).ToList();
 
         public ProcedureResource Get(string id) =>
             _procedureResources.Find<ProcedureResource>(procedureResource => procedureResource.Procedure!.Id == id).FirstOrDefault();
@@ -40,12 +43,13 @@ namespace PatientNavigation.Common.Repositories
             return procedureResource;
         }
 
-        public void Update(string id, ProcedureResource procedureResourceIn)  {
+        public void Update(string id, ProcedureResource procedureResourceIn)
+        {
 
             var update = Builders<ProcedureResource>.Update
                 .Set(r => r.Status, procedureResourceIn.Status)
                 .Set(r => r.LastUpdated, procedureResourceIn.LastUpdated);
-            
+
             if (procedureResourceIn.Procedure != null)
                 update = update.Set(r => r.Procedure, procedureResourceIn.Procedure);
 

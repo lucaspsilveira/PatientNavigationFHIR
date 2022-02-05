@@ -11,6 +11,7 @@ namespace PatientNavigation.Common.Repositories
         AppointmentResource Create(AppointmentResource appointmentResource);
         List<AppointmentResource> Get();
         AppointmentResource Get(string id);
+        List<AppointmentResource> GetAppointmentsOfSubject(string subjectId);
         void Remove(AppointmentResource appointmentResourceIn);
         void Remove(string id);
         void Update(string id, AppointmentResource appointmentResourceIn);
@@ -31,6 +32,9 @@ namespace PatientNavigation.Common.Repositories
         public List<AppointmentResource> Get() =>
             _appointmentResources.Find(appointmentResource => true).ToList();
 
+        public List<AppointmentResource> GetAppointmentsOfSubject(string subjectId) =>
+            _appointmentResources.Find(appointmentResource => appointmentResource.Appointment != null && appointmentResource.Appointment.Participant.Any(a => a.Actor.Reference.Contains(subjectId))).ToList();
+
         public AppointmentResource Get(string id) =>
             _appointmentResources.Find<AppointmentResource>(appointmentResource => appointmentResource.Appointment!.Id == id).FirstOrDefault();
 
@@ -40,12 +44,13 @@ namespace PatientNavigation.Common.Repositories
             return appointmentResource;
         }
 
-        public void Update(string id, AppointmentResource appointmentResourceIn)  {
+        public void Update(string id, AppointmentResource appointmentResourceIn)
+        {
 
             var update = Builders<AppointmentResource>.Update
                 .Set(r => r.Status, appointmentResourceIn.Status)
                 .Set(r => r.LastUpdated, appointmentResourceIn.LastUpdated);
-            
+
             if (appointmentResourceIn.Appointment != null)
                 update = update.Set(r => r.Appointment, appointmentResourceIn.Appointment);
 

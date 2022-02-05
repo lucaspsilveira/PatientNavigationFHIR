@@ -14,6 +14,7 @@ namespace PatientNavigation.Common.Repositories
         void Remove(MedicationStatementResource medicationStatementResourceIn);
         void Remove(string id);
         void Update(string id, MedicationStatementResource medicationStatementResourceIn);
+        List<MedicationStatementResource> GetMedicationStatementFromSubjectId(string subjectId);
     }
 
     public class MedicationStatementRepository : IMedicationStatementRepository
@@ -31,6 +32,10 @@ namespace PatientNavigation.Common.Repositories
         public List<MedicationStatementResource> Get() =>
             _medicationStatementResources.Find(medicationStatementResource => true).ToList();
 
+        public List<MedicationStatementResource> GetMedicationStatementFromSubjectId(string subjectId)
+           =>
+            _medicationStatementResources.Find(medicationStatementResource => medicationStatementResource.MedicationStatement != null && medicationStatementResource.MedicationStatement.Subject.Reference.Contains(subjectId)).ToList();
+
         public MedicationStatementResource Get(string id) =>
             _medicationStatementResources.Find<MedicationStatementResource>(medicationStatementResource => medicationStatementResource.MedicationStatement!.Id == id).FirstOrDefault();
 
@@ -40,12 +45,13 @@ namespace PatientNavigation.Common.Repositories
             return medicationStatementResource;
         }
 
-        public void Update(string id, MedicationStatementResource medicationStatementResourceIn)  {
+        public void Update(string id, MedicationStatementResource medicationStatementResourceIn)
+        {
 
             var update = Builders<MedicationStatementResource>.Update
                 .Set(r => r.Status, medicationStatementResourceIn.Status)
                 .Set(r => r.LastUpdated, medicationStatementResourceIn.LastUpdated);
-            
+
             if (medicationStatementResourceIn.MedicationStatement != null)
                 update = update.Set(r => r.MedicationStatement, medicationStatementResourceIn.MedicationStatement);
 

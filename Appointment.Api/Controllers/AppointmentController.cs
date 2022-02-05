@@ -56,9 +56,14 @@ namespace Appointment.Api.Controllers
         }
         
         [HttpGet("")]
-        public ObjectResult GetAllAsync()
-        {
-            var result = _appointmentRepository.Get();
+        public ObjectResult GetAllAsync([FromQuery] string? subject)
+        {   
+            var result = new List<PatientNavigation.Common.Models.AppointmentResource>();
+            if (string.IsNullOrEmpty(subject))
+                result = _appointmentRepository.Get();
+            else 
+                result = _appointmentRepository.GetAppointmentsOfSubject(subject);
+                
             var searchResponse = new Bundle();
             searchResponse.Type = Bundle.BundleType.Searchset;
 

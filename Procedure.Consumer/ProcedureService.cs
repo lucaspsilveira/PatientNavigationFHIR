@@ -36,7 +36,7 @@ namespace Procedure.Consumer
                 LastUpdated = DateTime.UtcNow
             };
 
-            if (string.IsNullOrEmpty(resource.Id) || resource.Subject.Reference.Split("/")[1].Length != 2)
+            if (string.IsNullOrEmpty(resource.Id) || resource.Subject.Reference.Split("/")[1].Length == 0)
             {
                 _logger.LogError($"Procedure not created/updated on FHIR Server.");
                 procedureResource.Status = "FAILED";

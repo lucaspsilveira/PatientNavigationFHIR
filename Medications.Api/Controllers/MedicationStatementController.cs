@@ -62,9 +62,14 @@ namespace Medications.Api.Controllers
         }
 
         [HttpGet("")]
-        public ObjectResult GetAllAsync()
+        public ObjectResult GetAllAsync([FromQuery] string? subjectId)
         {
-            var result = _medicationStatementRepository.Get();
+            var result = new List<PatientNavigation.Common.Models.MedicationStatementResource>();
+            if (string.IsNullOrEmpty(subjectId))
+                result = _medicationStatementRepository.Get();
+            else 
+                result = _medicationStatementRepository.GetMedicationStatementFromSubjectId(subjectId);
+            
             var searchResponse = new Bundle();
             searchResponse.Type = Bundle.BundleType.Searchset;
 
