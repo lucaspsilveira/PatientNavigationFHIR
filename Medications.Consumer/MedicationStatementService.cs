@@ -33,11 +33,19 @@ namespace Medications.Consumer
         {
             var parser = new FhirJsonParser();
             var resource = parser.Parse<Hl7.Fhir.Model.MedicationStatement>(medicationStatementPayload);
-            var result = await _client.UpdateAsync(resource).ConfigureAwait(false);
-            var medicationStatementResource = new MedicationStatementResource {
+             var medicationStatementResource = new MedicationStatementResource {
                 MedicationStatement = resource,
                 LastUpdated = DateTime.UtcNow
             };
+            if (string.IsNullOrEmpty(resource.Id)) {
+                
+                _logger.LogError($"Medication Statement not created/updated on FHIR Server.");
+                medicationStatementResource.Status = "FAILED";
+                 _medicationStatementRepository.Update(resource.Id, medicationStatementResource);
+                return;
+            }
+            var result = await _client.UpdateAsync(resource).ConfigureAwait(false);
+           
             if (result != null)
             {
                 _logger.LogInformation($"Medication Statement created/updated on FHIR Server with Id: {result.Id}");

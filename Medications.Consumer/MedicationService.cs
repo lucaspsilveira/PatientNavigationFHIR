@@ -16,7 +16,7 @@ namespace Medications.Consumer
             ILogger<MedicationService> logger,
             IConfiguration configuration,
             IMedicationRepository medicationRepository)
-            
+
         {
             _logger = logger;
             _medicationRepository = medicationRepository;
@@ -35,11 +35,21 @@ namespace Medications.Consumer
         {
             var parser = new FhirJsonParser();
             var resource = parser.Parse<Hl7.Fhir.Model.Medication>(medicationPayload);
-            var result = await _client.UpdateAsync(resource).ConfigureAwait(false);
-            var medicationResource = new MedicationResource {
+            var medicationResource = new MedicationResource
+            {
                 Medication = resource,
                 LastUpdated = DateTime.UtcNow
             };
+            if (string.IsNullOrEmpty(resource.Id))
+            {
+                _logger.LogError($"Medication not created/updated on FHIR Server.");
+                medicationResource.Status = "FAILED";
+                _medicationRepository.Update(resource.Id, medicationResource);
+                return;
+            }
+
+
+            var result = await _client.UpdateAsync(resource).ConfigureAwait(false);
             if (result != null)
             {
                 _logger.LogInformation($"Medication created/updated on FHIR Server with Id: {result.Id}");
@@ -56,17 +66,18 @@ namespace Medications.Consumer
         public async Task SyncMedication(string medicationId)
         {
             var result = await _client.SearchByIdAsync<Hl7.Fhir.Model.Medication>(medicationId);
-            if (result != null) 
+            if (result != null)
             {
                 var synchronizedResource = result?.Entry?.FirstOrDefault()?.Resource as Hl7.Fhir.Model.Medication;
-                var medicationResource = new PatientNavigation.Common.Models.MedicationResource 
-                    { LastUpdated = DateTime.UtcNow };
-                if (synchronizedResource != null) {
+                var medicationResource = new PatientNavigation.Common.Models.MedicationResource
+                { LastUpdated = DateTime.UtcNow };
+                if (synchronizedResource != null)
+                {
                     _logger.LogInformation($"Medication Resource fetched from FHIR Server with ID {synchronizedResource?.Id}");
                     medicationResource.Status = "SYNCHRONIZED";
                     medicationResource.Medication = synchronizedResource;
-                } 
-                else 
+                }
+                else
                 {
                     medicationResource.Status = "FAILEDSYNCHRONIZED";
                 }
